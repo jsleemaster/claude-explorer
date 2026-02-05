@@ -1,0 +1,42 @@
+[package]
+name = "claude-explorer"
+version = "0.1.0"
+edition = "2021"
+authors = ["jsleemaster"]
+description = "A TUI file explorer for Claude Code CLI"
+license = "MIT"
+repository = "https://github.com/jsleemaster/claude-explorer"
+homepage = "https://github.com/jsleemaster/claude-explorer"
+keywords = ["cli", "tui", "file-explorer", "claude", "terminal"]
+categories = ["command-line-utilities", "development-tools"]
+
+[dependencies]
+# TUI framework
+ratatui = "0.29"
+crossterm = "0.28"
+
+# Async runtime
+tokio = { version = "1.42", features = ["full"] }
+
+# File system watching
+notify = "7.0"
+notify-debouncer-mini = "0.5"
+
+# File tree handling
+ignore = "0.4"              # gitignore support
+walkdir = "2.5"
+
+# PTY for terminal embedding
+portable-pty = "0.8"
+
+# Utilities
+anyhow = "1.0"
+thiserror = "2.0"
+dirs = "5.0"
+clap = { version = "4.5", features = ["derive"] }
+unicode-width = "0.2"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

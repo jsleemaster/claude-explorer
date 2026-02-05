@@ -1,0 +1,93 @@
+name: Bug Report
+description: Report a bug to help us improve Claude Explorer
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out this form as completely as possible.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: Please confirm the following before submitting
+      options:
+        - label: I have searched the [existing issues](https://github.com/jsleemaster/claude-explorer/issues) and this bug has not been reported
+          required: true
+        - label: I am using the latest version of Claude Explorer
+          required: true
+        - label: I have read the [README](https://github.com/jsleemaster/claude-explorer#readme)
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of the bug
+      placeholder: Describe what happened...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Run `claude-explorer --path /some/dir`
+        2. Press '...'
+        3. Navigate to '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: Describe what should have happened...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: Describe what actually happened...
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Please provide your environment details
+      value: |
+        - OS: [e.g., macOS 14.0, Ubuntu 22.04, Windows 11]
+        - Terminal: [e.g., iTerm2, Terminal.app, Windows Terminal]
+        - Shell: [e.g., zsh, bash, fish]
+        - Claude Explorer version: [run `claude-explorer --version`]
+        - Rust version (if building from source): [run `rustc --version`]
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Diagnostic Output
+      description: |
+        If applicable, please include any error messages or diagnostic output.
+        You can run with `RUST_LOG=debug claude-explorer 2> debug.log` to capture debug logs.
+      placeholder: Paste any error messages or logs here...
+      render: shell
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or information about the problem here
+      placeholder: Any additional information...

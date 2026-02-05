@@ -1,0 +1,156 @@
+# 🦀 Claude Explorer
+
+[![GitHub Release](https://img.shields.io/github/v/release/jsleemaster/claude-explorer)](https://github.com/jsleemaster/claude-explorer/releases)
+[![Crates.io Version](https://img.shields.io/crates/v/claude-explorer)](https://crates.io/crates/claude-explorer)
+[![Crates.io Downloads](https://img.shields.io/crates/d/claude-explorer)](https://crates.io/crates/claude-explorer)
+[![GitHub Stars](https://img.shields.io/github/stars/jsleemaster/claude-explorer)](https://github.com/jsleemaster/claude-explorer/stargazers)
+[![GitHub Issues](https://img.shields.io/github/issues/jsleemaster/claude-explorer)](https://github.com/jsleemaster/claude-explorer/issues)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+A terminal-based file explorer designed to work alongside Claude Code CLI. View your project structure in a split-pane TUI while using Claude Code.
+
+```
+┌─────────────────────────────────────────────┬──────────────────────┐
+│                                             │ 📂 my-project        │
+│  Claude Code                                │ ├── 📁 src           │
+│                                             │ │   ├── 🦀 main.rs   │
+│  > Help me refactor this function           │ │   ├── 🦀 app.rs    │
+│                                             │ │   └── 📁 ui        │
+│  I'll analyze the code structure...         │ ├── 📋 Cargo.toml    │
+│                                             │ ├── 📖 README.md     │
+│                                             │ └── 📄 .gitignore    │
+│                                             │                      │
+│                                             │ Tab: switch | ?: help│
+└─────────────────────────────────────────────┴──────────────────────┘
+```
+
+## ✨ Features
+
+- **Split-pane TUI**: File tree on the right, Claude Code on the left
+- **Interactive file tree**: Navigate, expand/collapse directories
+- **Quick file reference**: Press Enter on a file to insert `@path` in Claude Code
+- **Directory navigation**: Press Enter on a directory to `cd` into it
+- **Search**: Find files by name with `/` search
+- **gitignore support**: Respects `.gitignore` patterns
+- **File icons**: Visual indicators for different file types
+- **Keyboard-driven**: Vim-style navigation
+
+## 📦 Installation
+
+### From source
+
+```bash
+# Clone the repository
+git clone https://github.com/jsleemaster/claude-explorer.git
+cd claude-explorer
+
+# Build and install
+cargo install --path .
+```
+
+### From crates.io (coming soon)
+
+```bash
+cargo install claude-explorer
+```
+
+## 🚀 Usage
+
+```bash
+# Start in current directory
+claude-explorer
+
+# Start in specific directory
+claude-explorer --path /path/to/project
+
+# Adjust tree width (10-50%)
+claude-explorer --tree-width 25
+
+# Show hidden files
+claude-explorer --show-hidden
+```
+
+## ⌨️ Keyboard Shortcuts
+
+### Global
+| Key | Action |
+|-----|--------|
+| `Tab` | Switch between Tree and Terminal panes |
+| `Ctrl+T` | Focus Tree pane |
+| `Ctrl+Q` | Quit |
+| `F1` / `?` | Toggle help |
+
+### File Tree Pane
+| Key | Action |
+|-----|--------|
+| `j` / `↓` | Move down |
+| `k` / `↑` | Move up |
+| `g` / `Home` | Go to first |
+| `G` / `End` | Go to last |
+| `Enter` / `l` | Open/expand or insert path |
+| `h` / `←` | Collapse or go to parent |
+| `Space` | Toggle expand/collapse |
+| `/` | Start search |
+| `n` / `N` | Next/previous search result |
+| `.` | Toggle hidden files |
+| `r` / `F5` | Refresh tree |
+
+### Terminal Pane
+All keys are passed directly to Claude Code.
+
+## 🔧 Configuration
+
+### Command line options
+
+```
+Options:
+  -p, --path <PATH>          Working directory [default: .]
+  -w, --tree-width <WIDTH>   Tree panel width percentage (10-50) [default: 30]
+  -a, --show-hidden          Show hidden files
+  -d, --depth <DEPTH>        Max tree depth [default: 10]
+  -h, --help                 Print help
+  -V, --version              Print version
+```
+
+## 🛠️ Development
+
+```bash
+# Clone
+git clone https://github.com/jsleemaster/claude-explorer.git
+cd claude-explorer
+
+# Run in development
+cargo run
+
+# Run tests
+cargo test
+
+# Build release
+cargo build --release
+```
+
+## 📋 Requirements
+
+- Rust 1.70+
+- Claude Code CLI installed and in PATH
+- Terminal with UTF-8 and true color support
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [ratatui](https://github.com/ratatui-org/ratatui) - Terminal UI framework
+- [Claude Code](https://claude.com) - AI coding assistant by Anthropic
+- Inspired by ranger, nnn, and other terminal file managers
