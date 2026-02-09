@@ -36,7 +36,7 @@ jobs:
             asset_name: claude-explorer-windows-x86_64.exe
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -66,7 +66,7 @@ jobs:
           cp target/${{ matrix.target }}/release/${{ matrix.artifact_name }} ${{ matrix.asset_name }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.asset_name }}
           path: ${{ matrix.asset_name }}
@@ -80,7 +80,7 @@ jobs:
 
       - name: Upload tarball
         if: runner.os != 'Windows'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.asset_name }}.tar.gz
           path: ${{ matrix.asset_name }}.tar.gz
@@ -92,10 +92,10 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           path: artifacts
 
@@ -114,7 +114,7 @@ jobs:
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           name: Release ${{ steps.version.outputs.VERSION }}
           draft: false
@@ -131,7 +131,7 @@ jobs:
     needs: release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -149,7 +149,7 @@ jobs:
     needs: release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -177,7 +177,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download tarball artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           path: artifacts
           pattern: "*.tar.gz"
@@ -195,7 +195,7 @@ jobs:
           echo "LINUX_AARCH64=$(sha256sum artifacts/claude-explorer-linux-aarch64.tar.gz/claude-explorer-linux-aarch64.tar.gz | cut -d' ' -f1)" >> $GITHUB_OUTPUT
 
       - name: Checkout homebrew-tap
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: jsleemaster/homebrew-tap
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}

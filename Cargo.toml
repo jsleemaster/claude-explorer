@@ -12,15 +12,15 @@ categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
 # TUI framework
-ratatui = "0.29"
+ratatui = "0.30"
 crossterm = "0.29"
 
 # Async runtime
 tokio = { version = "1.42", features = ["full"] }
 
 # File system watching
-notify = "7.0"
-notify-debouncer-mini = "0.5"
+notify = "8.2"
+notify-debouncer-mini = "0.7"
 
 # File tree handling
 ignore = "0.4"              # gitignore support
