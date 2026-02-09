@@ -1,8 +1,10 @@
 # 🦀 Claude Explorer
 
 [![GitHub Release](https://img.shields.io/github/v/release/jsleemaster/claude-explorer)](https://github.com/jsleemaster/claude-explorer/releases)
+[![npm](https://img.shields.io/npm/v/claude-explorer)](https://www.npmjs.com/package/claude-explorer)
 [![Crates.io Version](https://img.shields.io/crates/v/claude-explorer)](https://crates.io/crates/claude-explorer)
 [![Crates.io Downloads](https://img.shields.io/crates/d/claude-explorer)](https://crates.io/crates/claude-explorer)
+[![Homebrew](https://img.shields.io/badge/homebrew-available-blue)](https://github.com/jsleemaster/homebrew-tap)
 [![GitHub Stars](https://img.shields.io/github/stars/jsleemaster/claude-explorer)](https://github.com/jsleemaster/claude-explorer/stargazers)
 [![GitHub Issues](https://img.shields.io/github/issues/jsleemaster/claude-explorer)](https://github.com/jsleemaster/claude-explorer/issues)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -37,21 +39,32 @@ A terminal-based file explorer designed to work alongside Claude Code CLI. View 
 
 ## 📦 Installation
 
-### From source
+### npm / bun
 
 ```bash
-# Clone the repository
-git clone https://github.com/jsleemaster/claude-explorer.git
-cd claude-explorer
-
-# Build and install
-cargo install --path .
+npm install -g claude-explorer
+# or
+bun install -g claude-explorer
 ```
 
-### From crates.io (coming soon)
+### Homebrew (macOS / Linux)
+
+```bash
+brew install jsleemaster/tap/claude-explorer
+```
+
+### From crates.io
 
 ```bash
 cargo install claude-explorer
+```
+
+### From source
+
+```bash
+git clone https://github.com/jsleemaster/claude-explorer.git
+cd claude-explorer
+cargo install --path .
 ```
 
 ## 🚀 Usage

@@ -2,8 +2,8 @@ use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent, MouseEventKind};
 use std::path::PathBuf;
 
-use crate::tree::FileTree;
 use crate::terminal::TerminalPane;
+use crate::tree::FileTree;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FocusedPane {
@@ -25,6 +25,7 @@ pub struct App {
     pub search_query: String,
     pub tree_width_percent: u16,
     pub show_help: bool,
+    #[allow(dead_code)]
     pub should_quit: bool,
     pub status_message: Option<String>,
 }
@@ -35,12 +36,13 @@ impl App {
         tree_width: u16,
         show_hidden: bool,
         max_depth: usize,
+        claude_args: Vec<String>,
     ) -> Result<Self> {
         let canonical_path = path.canonicalize().unwrap_or(path);
 
         Ok(Self {
             tree: FileTree::new(&canonical_path, show_hidden, max_depth)?,
-            terminal: TerminalPane::new(&canonical_path)?,
+            terminal: TerminalPane::new(&canonical_path, &claude_args)?,
             focused: FocusedPane::Terminal,
             input_mode: InputMode::Normal,
             search_query: String::new(),
@@ -51,8 +53,9 @@ impl App {
         })
     }
 
-    pub fn tick(&mut self) {
+    pub fn tick(&mut self) -> bool {
         self.terminal.tick();
+        self.terminal.is_process_exited()
     }
 
     pub fn handle_key(&mut self, key: KeyEvent) -> bool {
@@ -70,7 +73,9 @@ impl App {
         }
 
         // Help toggle
-        if key.code == KeyCode::F(1) || (key.code == KeyCode::Char('?') && self.input_mode == InputMode::Normal) {
+        if key.code == KeyCode::F(1)
+            || (key.code == KeyCode::Char('?') && self.input_mode == InputMode::Normal)
+        {
             self.show_help = !self.show_help;
             return false;
         }
@@ -157,11 +162,14 @@ impl App {
             // Toggle hidden files
             KeyCode::Char('.') => {
                 self.tree.toggle_hidden();
-                self.set_status(if self.tree.show_hidden {
-                    "Showing hidden files"
-                } else {
-                    "Hiding hidden files"
-                }.to_string());
+                self.set_status(
+                    if self.tree.show_hidden {
+                        "Showing hidden files"
+                    } else {
+                        "Hiding hidden files"
+                    }
+                    .to_string(),
+                );
             }
 
             // Switch pane
@@ -230,6 +238,7 @@ impl App {
         self.status_message = Some(message);
     }
 
+    #[allow(dead_code)]
     pub fn clear_status(&mut self) {
         self.status_message = None;
     }
