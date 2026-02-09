@@ -27,7 +27,7 @@ ignore = "0.4"              # gitignore support
 walkdir = "2.5"
 
 # PTY for terminal embedding
-portable-pty = "0.8"
+portable-pty = "0.9"
 
 # Utilities
 anyhow = "1.0"
