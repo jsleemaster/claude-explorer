@@ -71,6 +71,20 @@ jobs:
           name: ${{ matrix.asset_name }}
           path: ${{ matrix.asset_name }}
 
+      - name: Create tarball (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          cp ${{ matrix.asset_name }} claude-explorer
+          tar czf ${{ matrix.asset_name }}.tar.gz claude-explorer
+          rm claude-explorer
+
+      - name: Upload tarball
+        if: runner.os != 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}.tar.gz
+          path: ${{ matrix.asset_name }}.tar.gz
+
   release:
     name: Create Release
     needs: build
@@ -129,3 +143,113 @@ jobs:
         run: cargo publish
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  publish-npm:
+    name: Publish to npm
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Set package version
+        working-directory: npm
+        run: npm version "${{ steps.version.outputs.VERSION }}" --no-git-tag-version
+
+      - name: Publish to npm
+        working-directory: npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  update-homebrew:
+    name: Update Homebrew tap
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download tarball artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: "*.tar.gz"
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Compute SHA256 checksums
+        id: sha
+        run: |
+          echo "MACOS_AARCH64=$(sha256sum artifacts/claude-explorer-macos-aarch64.tar.gz/claude-explorer-macos-aarch64.tar.gz | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+          echo "MACOS_X86_64=$(sha256sum artifacts/claude-explorer-macos-x86_64.tar.gz/claude-explorer-macos-x86_64.tar.gz | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+          echo "LINUX_X86_64=$(sha256sum artifacts/claude-explorer-linux-x86_64.tar.gz/claude-explorer-linux-x86_64.tar.gz | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+          echo "LINUX_AARCH64=$(sha256sum artifacts/claude-explorer-linux-aarch64.tar.gz/claude-explorer-linux-aarch64.tar.gz | cut -d' ' -f1)" >> $GITHUB_OUTPUT
+
+      - name: Checkout homebrew-tap
+        uses: actions/checkout@v4
+        with:
+          repository: jsleemaster/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-tap
+
+      - name: Update formula
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          RELEASE_URL="https://github.com/jsleemaster/claude-explorer/releases/download/v${VERSION}"
+          SHA_MACOS_AARCH64="${{ steps.sha.outputs.MACOS_AARCH64 }}"
+          SHA_MACOS_X86_64="${{ steps.sha.outputs.MACOS_X86_64 }}"
+          SHA_LINUX_X86_64="${{ steps.sha.outputs.LINUX_X86_64 }}"
+          SHA_LINUX_AARCH64="${{ steps.sha.outputs.LINUX_AARCH64 }}"
+          cat > homebrew-tap/Formula/claude-explorer.rb <<EOF
+          class ClaudeExplorer < Formula
+            desc "A TUI file explorer for Claude Code CLI"
+            homepage "https://github.com/jsleemaster/claude-explorer"
+            license "MIT"
+
+            on_macos do
+              if Hardware::CPU.arm?
+                url "${RELEASE_URL}/claude-explorer-macos-aarch64.tar.gz"
+                sha256 "${SHA_MACOS_AARCH64}"
+              else
+                url "${RELEASE_URL}/claude-explorer-macos-x86_64.tar.gz"
+                sha256 "${SHA_MACOS_X86_64}"
+              end
+            end
+
+            on_linux do
+              if Hardware::CPU.arm?
+                url "${RELEASE_URL}/claude-explorer-linux-aarch64.tar.gz"
+                sha256 "${SHA_LINUX_AARCH64}"
+              else
+                url "${RELEASE_URL}/claude-explorer-linux-x86_64.tar.gz"
+                sha256 "${SHA_LINUX_X86_64}"
+              end
+            end
+
+            def install
+              bin.install "claude-explorer"
+            end
+
+            test do
+              assert_match "claude-explorer", shell_output("\#{bin}/claude-explorer --version")
+            end
+          end
+          EOF
+
+      - name: Commit and push formula
+        working-directory: homebrew-tap
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/claude-explorer.rb
+          git commit -m "Update claude-explorer to v${{ steps.version.outputs.VERSION }}"
+          git push

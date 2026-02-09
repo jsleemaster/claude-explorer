@@ -150,6 +150,19 @@ RUST_LOG=debug cargo run 2> debug.log
 cargo run -- --no-terminal  # TODO: 구현 필요
 ```
 
+## Agent Teams 작업 가이드
+
+### 독립 작업 영역
+- **config 시스템**: `src/config.rs` (신규), `src/app.rs`
+- **마우스 이벤트**: `src/event.rs`, `src/app.rs`, `src/ui/file_tree_widget.rs`
+- **테스트**: `tests/` 디렉토리
+- **테마**: `src/ui/` 전체
+
+### 주의사항
+- `src/app.rs`는 여러 기능이 터치할 수 있음 → 작은 단위로 작업
+- 새 모듈 추가 시 `src/main.rs`의 mod 선언 필요
+- `cargo test`로 항상 검증
+
 ## 릴리스 체크리스트
 
 1. `cargo fmt && cargo clippy`

@@ -52,7 +52,7 @@ impl<'a> StatefulWidget for FileTreeWidget<'a> {
                     .fg(Color::White)
                     .bold()
             } else if node.is_dir {
-                Style::default().fg(Color::Blue).bold()
+                Style::default().fg(Color::LightCyan).bold()
             } else {
                 Style::default().fg(Color::White)
             };

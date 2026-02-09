@@ -35,12 +35,13 @@ impl App {
         tree_width: u16,
         show_hidden: bool,
         max_depth: usize,
+        claude_args: Vec<String>,
     ) -> Result<Self> {
         let canonical_path = path.canonicalize().unwrap_or(path);
 
         Ok(Self {
             tree: FileTree::new(&canonical_path, show_hidden, max_depth)?,
-            terminal: TerminalPane::new(&canonical_path)?,
+            terminal: TerminalPane::new(&canonical_path, &claude_args)?,
             focused: FocusedPane::Terminal,
             input_mode: InputMode::Normal,
             search_query: String::new(),
@@ -51,8 +52,9 @@ impl App {
         })
     }
 
-    pub fn tick(&mut self) {
+    pub fn tick(&mut self) -> bool {
         self.terminal.tick();
+        self.terminal.is_process_exited()
     }
 
     pub fn handle_key(&mut self, key: KeyEvent) -> bool {

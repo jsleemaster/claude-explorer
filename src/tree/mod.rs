@@ -82,14 +82,9 @@ impl FileTree {
             .git_exclude(true)
             .max_depth(Some(1))
             .sort_by_file_name(|a, b| {
-                // Directories first, then alphabetically
-                let a_is_dir = a.is_dir();
-                let b_is_dir = b.is_dir();
-                match (a_is_dir, b_is_dir) {
-                    (true, false) => std::cmp::Ordering::Less,
-                    (false, true) => std::cmp::Ordering::Greater,
-                    _ => a.file_name().cmp(&b.file_name()),
-                }
+                // Alphabetical sort by file name (directory-first sorting
+                // is handled after walking via entry metadata)
+                a.cmp(b)
             })
             .build();
 
@@ -98,6 +93,12 @@ impl FileTree {
 
             // Skip the root itself when iterating
             if entry_path == path && depth > 0 {
+                continue;
+            }
+
+            // At depth 0, only process the root entry itself.
+            // Children will be added by the recursive call below.
+            if depth == 0 && entry_path != path {
                 continue;
             }
 
