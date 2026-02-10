@@ -1,5 +1,5 @@
 name: Feature Request
-description: Suggest a new feature or enhancement for Claude Explorer
+description: Suggest a new feature or enhancement for cltree
 title: "[Feature]: "
 labels: ["enhancement", "triage"]
 body:
@@ -14,9 +14,9 @@ body:
       label: Prerequisites
       description: Please confirm the following before submitting
       options:
-        - label: I have searched the [existing issues](https://github.com/jsleemaster/claude-explorer/issues) and this feature has not been requested
+        - label: I have searched the [existing issues](https://github.com/jsleemaster/cltree/issues) and this feature has not been requested
           required: true
-        - label: I have read the [README](https://github.com/jsleemaster/claude-explorer#readme) and confirmed this feature doesn't already exist
+        - label: I have read the [README](https://github.com/jsleemaster/cltree#readme) and confirmed this feature doesn't already exist
           required: true
 
   - type: dropdown

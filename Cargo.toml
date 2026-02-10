@@ -1,12 +1,12 @@
 [package]
-name = "claude-explorer"
+name = "cltree"
 version = "0.2.1"
 edition = "2021"
 authors = ["jsleemaster"]
 description = "A TUI file explorer for Claude Code CLI"
 license = "MIT"
-repository = "https://github.com/jsleemaster/claude-explorer"
-homepage = "https://github.com/jsleemaster/claude-explorer"
+repository = "https://github.com/jsleemaster/cltree"
+homepage = "https://github.com/jsleemaster/cltree"
 keywords = ["cli", "tui", "file-explorer", "claude", "terminal"]
 categories = ["command-line-utilities", "development-tools"]
 

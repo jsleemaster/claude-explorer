@@ -1,34 +1,34 @@
-# claude-explorer
+# cltree
 
 A terminal-based file explorer designed to work alongside Claude Code CLI. View your project structure in a split-pane TUI while using Claude Code.
 
 ## Installation
 
 ```bash
-npm install -g claude-explorer
+npm install -g cltree
 # or
-bun install -g claude-explorer
+bun install -g cltree
 ```
 
 ## Usage
 
 ```bash
 # Start in current directory
-claude-explorer
+cltree
 
 # Start in specific directory
-claude-explorer --path /path/to/project
+cltree --path /path/to/project
 
 # Adjust tree width (10-50%)
-claude-explorer --tree-width 25
+cltree --tree-width 25
 
 # Show hidden files
-claude-explorer --show-hidden
+cltree --show-hidden
 ```
 
 ## How it works
 
-This package downloads the pre-built native binary for your platform from [GitHub Releases](https://github.com/jsleemaster/claude-explorer/releases) during installation. No Rust toolchain required.
+This package downloads the pre-built native binary for your platform from [GitHub Releases](https://github.com/jsleemaster/cltree/releases) during installation. No Rust toolchain required.
 
 ### Supported platforms
 
@@ -40,12 +40,12 @@ This package downloads the pre-built native binary for your platform from [GitHu
 
 ```bash
 # From crates.io
-cargo install claude-explorer
+cargo install cltree
 
 # Homebrew (macOS/Linux)
-brew install jsleemaster/tap/claude-explorer
+brew install jsleemaster/tap/cltree
 ```
 
 ## License
 
-MIT - see [LICENSE](https://github.com/jsleemaster/claude-explorer/blob/main/LICENSE)
+MIT - see [LICENSE](https://github.com/jsleemaster/cltree/blob/main/LICENSE)

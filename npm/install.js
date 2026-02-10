@@ -8,8 +8,8 @@ const { getBinaryPath, getDownloadUrl, getPlatformKey } = require("./lib/platfor
 const MAX_REDIRECTS = 5;
 
 function main() {
-  if (process.env.CLAUDE_EXPLORER_SKIP_INSTALL) {
-    console.log("Skipping binary download (CLAUDE_EXPLORER_SKIP_INSTALL is set)");
+  if (process.env.CLTREE_SKIP_INSTALL) {
+    console.log("Skipping binary download (CLTREE_SKIP_INSTALL is set)");
     return;
   }
 
@@ -21,7 +21,7 @@ function main() {
   // Ensure bin directory exists
   fs.mkdirSync(path.dirname(dest), { recursive: true });
 
-  console.log(`Downloading claude-explorer v${version} for ${getPlatformKey()}...`);
+  console.log(`Downloading cltree v${version} for ${getPlatformKey()}...`);
   console.log(`  ${url}`);
 
   download(url, dest, 0)
@@ -30,13 +30,13 @@ function main() {
       if (process.platform !== "win32") {
         fs.chmodSync(dest, 0o755);
       }
-      console.log("claude-explorer installed successfully!");
+      console.log("cltree installed successfully!");
     })
     .catch((err) => {
-      console.error(`\nFailed to download claude-explorer: ${err.message}\n`);
+      console.error(`\nFailed to download cltree: ${err.message}\n`);
       console.error("You can install manually:");
-      console.error(`  cargo install claude-explorer`);
-      console.error(`  Or download from: https://github.com/jsleemaster/claude-explorer/releases`);
+      console.error(`  cargo install cltree`);
+      console.error(`  Or download from: https://github.com/jsleemaster/cltree/releases`);
       process.exit(1);
     });
 }
@@ -52,7 +52,7 @@ function download(url, dest, redirectCount) {
     const options = {
       hostname: parsedUrl.hostname,
       path: parsedUrl.pathname + parsedUrl.search,
-      headers: { "User-Agent": "claude-explorer-npm-installer" },
+      headers: { "User-Agent": "cltree-npm-installer" },
     };
 
     https

@@ -1,10 +1,10 @@
-# Claude Explorer - 개발 계획서
+# cltree - 개발 계획서
 
 ## 📋 개요
 
 | 항목 | 내용 |
 |------|------|
-| 프로젝트명 | claude-explorer |
+| 프로젝트명 | cltree |
 | 목표 | Claude Code CLI 옆에 파일 트리 UI를 보여주는 TUI 앱 |
 | 언어 | Rust |
 | 프레임워크 | ratatui + crossterm |
@@ -16,8 +16,8 @@
 
 ### 1.1 프로젝트 생성
 ```bash
-cargo new claude-explorer
-cd claude-explorer
+cargo new cltree
+cd cltree
 ```
 
 ### 1.2 Cargo.toml 의존성 추가
@@ -205,7 +205,7 @@ touch src/tree/mod.rs src/tree/file_node.rs
 ```
 
 ### 6.2 완료 기준
-- [ ] `claude-explorer --help` 출력
+- [ ] `cltree --help` 출력
 - [ ] 다양한 옵션 조합 테스트
 
 ---
@@ -281,7 +281,7 @@ touch src/tree/mod.rs src/tree/file_node.rs
 ### 시작하기
 ```bash
 # 프로젝트 디렉토리로 이동
-cd claude-explorer
+cd cltree
 
 # Claude Code 실행
 claude

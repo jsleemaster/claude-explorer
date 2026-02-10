@@ -26,7 +26,7 @@ struct Args {
     claude_args: Vec<String>,
 }
 
-/// claude-explorer 자체 플래그만 꺼내고, 나머지는 모두 Claude Code CLI로 전달
+/// cltree 자체 플래그만 꺼내고, 나머지는 모두 Claude Code CLI로 전달
 fn parse_args() -> Args {
     let raw: Vec<String> = std::env::args().skip(1).collect();
 
@@ -51,7 +51,7 @@ fn parse_args() -> Args {
         if arg == "-h" || arg == "--help" {
             eprintln!(
                 "A TUI file explorer for Claude Code CLI\n\n\
-                 Usage: claude-explorer [OPTIONS] [CLAUDE_ARGS...]\n\n\
+                 Usage: cltree [OPTIONS] [CLAUDE_ARGS...]\n\n\
                  Options:\n\
                  \x20 -p, --path <PATH>         Working directory [default: .]\n\
                  \x20 -w, --tree-width <WIDTH>   Tree panel width %% (10-50) [default: 30]\n\
@@ -60,13 +60,13 @@ fn parse_args() -> Args {
                  \x20 -h, --help                 Print help\n\
                  \x20 -V, --version              Print version\n\n\
                  All other arguments are passed through to Claude Code CLI.\n\
-                 Example: claude-explorer --resume\n\
-                 Example: claude-explorer -p /my/project --continue"
+                 Example: cltree --resume\n\
+                 Example: cltree -p /my/project --continue"
             );
             std::process::exit(0);
         }
         if arg == "-V" || arg == "--version" {
-            eprintln!("claude-explorer {}", env!("CARGO_PKG_VERSION"));
+            eprintln!("cltree {}", env!("CARGO_PKG_VERSION"));
             std::process::exit(0);
         }
 

@@ -13,7 +13,7 @@ try {
   if (err.status !== null) {
     process.exit(err.status);
   }
-  console.error(`Failed to run claude-explorer: ${err.message}`);
+  console.error(`Failed to run cltree: ${err.message}`);
   console.error(`Binary path: ${binaryPath}`);
   process.exit(1);
 }

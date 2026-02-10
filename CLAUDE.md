@@ -1,11 +1,11 @@
-# Claude Explorer - Project Context
+# cltree - Project Context
 
 Claude Code CLI 옆에 파일 트리를 보여주는 TUI 앱. Rust + ratatui 기반.
 
 ## 프로젝트 구조
 
 ```
-claude-explorer/
+cltree/
 ├── src/
 │   ├── main.rs              # 진입점, 터미널 초기화, 이벤트 루프
 │   ├── app.rs               # App 상태, 키 입력 핸들링
@@ -141,7 +141,7 @@ cargo test ui::
 - [ ] PTY 리사이즈 동기화 개선
 - [ ] 파일 변경 감지 (notify) 통합
 - [ ] 마우스 클릭으로 파일 선택
-- [ ] 설정 파일 지원 (~/.config/claude-explorer/config.toml)
+- [ ] 설정 파일 지원 (~/.config/cltree/config.toml)
 - [ ] 테마 커스터마이징
 
 ## 디버깅 팁

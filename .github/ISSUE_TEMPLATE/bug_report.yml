@@ -1,5 +1,5 @@
 name: Bug Report
-description: Report a bug to help us improve Claude Explorer
+description: Report a bug to help us improve cltree
 title: "[Bug]: "
 labels: ["bug", "triage"]
 body:
@@ -14,11 +14,11 @@ body:
       label: Prerequisites
       description: Please confirm the following before submitting
       options:
-        - label: I have searched the [existing issues](https://github.com/jsleemaster/claude-explorer/issues) and this bug has not been reported
+        - label: I have searched the [existing issues](https://github.com/jsleemaster/cltree/issues) and this bug has not been reported
           required: true
-        - label: I am using the latest version of Claude Explorer
+        - label: I am using the latest version of cltree
           required: true
-        - label: I have read the [README](https://github.com/jsleemaster/claude-explorer#readme)
+        - label: I have read the [README](https://github.com/jsleemaster/cltree#readme)
           required: true
 
   - type: textarea
@@ -36,7 +36,7 @@ body:
       label: Steps to Reproduce
       description: Steps to reproduce the behavior
       placeholder: |
-        1. Run `claude-explorer --path /some/dir`
+        1. Run `cltree --path /some/dir`
         2. Press '...'
         3. Navigate to '...'
         4. See error
@@ -70,7 +70,7 @@ body:
         - OS: [e.g., macOS 14.0, Ubuntu 22.04, Windows 11]
         - Terminal: [e.g., iTerm2, Terminal.app, Windows Terminal]
         - Shell: [e.g., zsh, bash, fish]
-        - Claude Explorer version: [run `claude-explorer --version`]
+        - cltree version: [run `cltree --version`]
         - Rust version (if building from source): [run `rustc --version`]
     validations:
       required: true
@@ -81,7 +81,7 @@ body:
       label: Diagnostic Output
       description: |
         If applicable, please include any error messages or diagnostic output.
-        You can run with `RUST_LOG=debug claude-explorer 2> debug.log` to capture debug logs.
+        You can run with `RUST_LOG=debug cltree 2> debug.log` to capture debug logs.
       placeholder: Paste any error messages or logs here...
       render: shell
 

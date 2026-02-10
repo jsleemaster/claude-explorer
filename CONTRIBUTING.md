@@ -1,6 +1,6 @@
-# Contributing to Claude Explorer
+# Contributing to cltree
 
-Thank you for your interest in contributing to Claude Explorer! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to cltree! This document provides guidelines and instructions for contributing.
 
 ## Language Policy
 
@@ -18,12 +18,12 @@ Thank you for your interest in contributing to Claude Explorer! This document pr
 1. Fork the repository on GitHub
 2. Clone your fork locally:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/claude-explorer.git
-   cd claude-explorer
+   git clone https://github.com/YOUR_USERNAME/cltree.git
+   cd cltree
    ```
 3. Add the upstream repository as a remote:
    ```bash
-   git remote add upstream https://github.com/jsleemaster/claude-explorer.git
+   git remote add upstream https://github.com/jsleemaster/cltree.git
    ```
 
 ## Build Commands
@@ -129,7 +129,7 @@ Be respectful and inclusive. We welcome contributors from all backgrounds and ex
 ## Questions?
 
 If you have questions, feel free to:
-- Open a [Discussion](https://github.com/jsleemaster/claude-explorer/discussions)
+- Open a [Discussion](https://github.com/jsleemaster/cltree/discussions)
 - Ask in your PR or issue
 
 Thank you for contributing!
