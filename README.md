@@ -3,7 +3,6 @@
 [![GitHub Release](https://img.shields.io/github/v/release/jsleemaster/cltree)](https://github.com/jsleemaster/cltree/releases)
 [![npm](https://img.shields.io/npm/v/cltree)](https://www.npmjs.com/package/cltree)
 [![Crates.io Version](https://img.shields.io/crates/v/cltree)](https://crates.io/crates/cltree)
-[![Crates.io Downloads](https://img.shields.io/crates/d/cltree)](https://crates.io/crates/cltree)
 [![Homebrew](https://img.shields.io/badge/homebrew-available-blue)](https://github.com/jsleemaster/homebrew-tap)
 [![GitHub Stars](https://img.shields.io/github/stars/jsleemaster/cltree)](https://github.com/jsleemaster/cltree/stargazers)
 [![GitHub Issues](https://img.shields.io/github/issues/jsleemaster/cltree)](https://github.com/jsleemaster/cltree/issues)
