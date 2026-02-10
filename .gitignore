@@ -25,5 +25,5 @@ Thumbs.db
 .claude/
 
 # npm package - downloaded binaries
-npm/bin/claude-explorer
-npm/bin/claude-explorer.exe
+npm/bin/cltree
+npm/bin/cltree.exe

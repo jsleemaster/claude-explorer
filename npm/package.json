@@ -1,9 +1,9 @@
 {
-  "name": "claude-explorer",
+  "name": "cltree",
   "version": "0.0.0",
   "description": "A TUI file explorer for Claude Code CLI",
   "bin": {
-    "claude-explorer": "bin/cli.js"
+    "cltree": "bin/cli.js"
   },
   "scripts": {
     "postinstall": "node install.js"
@@ -20,11 +20,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jsleemaster/claude-explorer.git"
+    "url": "https://github.com/jsleemaster/cltree.git"
   },
-  "homepage": "https://github.com/jsleemaster/claude-explorer",
+  "homepage": "https://github.com/jsleemaster/cltree",
   "bugs": {
-    "url": "https://github.com/jsleemaster/claude-explorer/issues"
+    "url": "https://github.com/jsleemaster/cltree/issues"
   },
   "os": [
     "darwin",

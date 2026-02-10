@@ -17,7 +17,7 @@ We take security vulnerabilities seriously. If you discover a security issue, pl
 
 2. **Email**: Send a detailed report to the maintainer via GitHub private message or create a private security advisory.
 
-3. **GitHub Security Advisory**: You can also report vulnerabilities through [GitHub's Security Advisory feature](https://github.com/jsleemaster/claude-explorer/security/advisories/new).
+3. **GitHub Security Advisory**: You can also report vulnerabilities through [GitHub's Security Advisory feature](https://github.com/jsleemaster/cltree/security/advisories/new).
 
 ### What to Include
 
@@ -46,7 +46,7 @@ Please include the following information in your report:
 
 This security policy applies to:
 
-- The `claude-explorer` binary and its source code
+- The `cltree` binary and its source code
 - Dependencies used by the project
 
 ### Out of Scope
@@ -59,6 +59,6 @@ This security policy applies to:
 - Always download releases from official sources (GitHub releases or crates.io)
 - Verify checksums when available
 - Keep your installation up to date
-- Be cautious when running Claude Explorer in directories with untrusted content
+- Be cautious when running cltree in directories with untrusted content
 
-Thank you for helping keep Claude Explorer secure!
+Thank you for helping keep cltree secure!

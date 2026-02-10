@@ -1,4 +1,4 @@
-use claude_explorer::vterm::VirtualTerminal;
+use cltree::vterm::VirtualTerminal;
 use ratatui::prelude::*;
 
 #[test]

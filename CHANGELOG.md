@@ -51,6 +51,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Command line options for path, tree width, hidden files, and depth
 - Help popup with `?` or `F1`
 
-[Unreleased]: https://github.com/jsleemaster/claude-explorer/compare/v0.2.0...HEAD
-[0.2.0]: https://github.com/jsleemaster/claude-explorer/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/jsleemaster/claude-explorer/releases/tag/v0.1.0
+[Unreleased]: https://github.com/jsleemaster/cltree/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/jsleemaster/cltree/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/jsleemaster/cltree/releases/tag/v0.1.0

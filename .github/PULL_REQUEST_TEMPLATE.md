@@ -19,7 +19,7 @@
 
 ## Checklist
 
-- [ ] I have read the [CONTRIBUTING](https://github.com/jsleemaster/claude-explorer/blob/main/CONTRIBUTING.md) guide
+- [ ] I have read the [CONTRIBUTING](https://github.com/jsleemaster/cltree/blob/main/CONTRIBUTING.md) guide
 - [ ] `cargo fmt` passed
 - [ ] `cargo clippy -- -D warnings` passed
 - [ ] `cargo test` passed
