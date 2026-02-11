@@ -42,7 +42,7 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
 
     // Set hardware blinking cursor position (terminal always focused)
     {
-        let vterm = app.terminal.vterm().lock().unwrap();
+        let vterm = app.terminal.vterm_lock();
         let cursor = vterm.cursor();
         if cursor.visible {
             let cx =

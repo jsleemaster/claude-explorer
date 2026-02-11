@@ -3,11 +3,18 @@ use portable_pty::{native_pty_system, CommandBuilder, PtyPair, PtySize};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard};
 use std::thread;
 use tokio::sync::mpsc;
 
 use crate::vterm::VirtualTerminal;
+
+/// Lock a mutex, recovering from poison (prior thread panic).
+fn lock_or_recover<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
+    mutex
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+}
 
 pub struct TerminalPane {
     pty_pair: Option<PtyPair>,
@@ -52,7 +59,7 @@ impl TerminalPane {
                      Install: npm install -g @anthropic-ai/claude-code\r\n",
                     e
                 );
-                vterm.lock().unwrap().feed(msg.as_bytes());
+                lock_or_recover(&vterm).feed(msg.as_bytes());
                 (None, None)
             }
         };
@@ -102,7 +109,7 @@ impl TerminalPane {
         // Take the writer from master PTY (can only be called once)
         // Store it in the shared Arc<Mutex<>> so both main thread and reader thread can use it
         if let Ok(writer) = pty_pair.master.take_writer() {
-            *pty_writer.lock().unwrap() = Some(writer);
+            *lock_or_recover(pty_writer) = Some(writer);
         }
 
         // Read output in background thread
@@ -117,7 +124,7 @@ impl TerminalPane {
                 match reader.read(&mut buf) {
                     Ok(0) => break,
                     Ok(n) => {
-                        let mut vt = vterm_clone.lock().unwrap();
+                        let mut vt = lock_or_recover(&vterm_clone);
                         vt.feed(&buf[..n]);
                         // Flush any DSR/CPR responses back to the PTY
                         let responses = vt.take_responses();
@@ -525,18 +532,19 @@ impl TerminalPane {
         }
     }
 
-    pub fn vterm(&self) -> &Arc<Mutex<VirtualTerminal>> {
-        &self.vterm
+    /// Acquire a poison-safe lock on the virtual terminal.
+    pub fn vterm_lock(&self) -> MutexGuard<'_, VirtualTerminal> {
+        lock_or_recover(&self.vterm)
     }
 
     pub fn scroll_up(&mut self) {
-        let mut vt = self.vterm.lock().unwrap();
+        let mut vt = lock_or_recover(&self.vterm);
         let current = vt.scroll_offset();
         vt.set_scroll_offset(current + 3);
     }
 
     pub fn scroll_down(&mut self) {
-        let mut vt = self.vterm.lock().unwrap();
+        let mut vt = lock_or_recover(&self.vterm);
         let current = vt.scroll_offset();
         vt.set_scroll_offset(current.saturating_sub(3));
     }
@@ -558,7 +566,7 @@ impl TerminalPane {
             });
         }
         // Resize the virtual terminal grid
-        let mut vt = self.vterm.lock().unwrap();
+        let mut vt = lock_or_recover(&self.vterm);
         vt.resize(cols as usize, rows as usize);
     }
 }
@@ -582,7 +590,8 @@ fn get_process_cwd(pid: u32) -> Option<PathBuf> {
 
     #[repr(C)]
     struct VnodeInfoPath {
-        _vip_vi: [u8; 152], // struct vnode_info
+        // struct vnode_info (see Darwin sys/proc_info.h: vnode_info is 152 bytes)
+        _vip_vi: [u8; 152],
         vip_path: [u8; MAXPATHLEN],
     }
 
@@ -614,7 +623,7 @@ fn get_process_cwd(pid: u32) -> Option<PathBuf> {
             size,
         );
 
-        if ret <= 0 {
+        if ret != size {
             return None;
         }
 

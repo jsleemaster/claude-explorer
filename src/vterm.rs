@@ -1,4 +1,5 @@
 use ratatui::prelude::*;
+use std::collections::VecDeque;
 use std::path::{Path, PathBuf};
 use vte::{Params, Perform};
 
@@ -40,12 +41,12 @@ pub struct VirtualTerminal {
     rows: usize,
     cursor: CursorState,
     current_style: Style,
-    scrollback: Vec<Vec<Cell>>,
+    scrollback: VecDeque<Vec<Cell>>,
     scroll_offset: usize,
     saved_cursor: Option<CursorState>,
     // Alternate screen buffer (used by full-screen apps like vim, less, etc.)
     saved_grid: Option<Vec<Vec<Cell>>>,
-    saved_scrollback: Option<Vec<Vec<Cell>>>,
+    saved_scrollback: Option<VecDeque<Vec<Cell>>>,
     saved_main_cursor: Option<CursorState>,
     parser: Option<vte::Parser>,
     // Scroll region (DECSTBM): top..bottom (0-indexed, bottom is exclusive)
@@ -67,7 +68,7 @@ impl VirtualTerminal {
             rows,
             cursor: CursorState::default(),
             current_style: Style::default(),
-            scrollback: Vec::new(),
+            scrollback: VecDeque::new(),
             scroll_offset: 0,
             saved_cursor: None,
             saved_grid: None,
@@ -144,7 +145,7 @@ impl VirtualTerminal {
         &self.cursor
     }
 
-    pub fn scrollback(&self) -> &Vec<Vec<Cell>> {
+    pub fn scrollback(&self) -> &VecDeque<Vec<Cell>> {
         &self.scrollback
     }
 
@@ -191,9 +192,9 @@ impl VirtualTerminal {
         let removed = self.grid.remove(self.scroll_top);
         // Only push to scrollback if scrolling from the very top of the screen
         if self.scroll_top == 0 {
-            self.scrollback.push(removed);
+            self.scrollback.push_back(removed);
             if self.scrollback.len() > MAX_SCROLLBACK {
-                self.scrollback.remove(0);
+                self.scrollback.pop_front();
             }
         }
         // Insert blank row at the bottom of the scroll region
@@ -432,6 +433,7 @@ impl VirtualTerminal {
 
     fn insert_lines(&mut self, count: usize) {
         let bottom = self.scroll_bottom.min(self.grid.len());
+        let count = count.min(self.rows);
         for _ in 0..count {
             if self.cursor.y >= self.scroll_top && self.cursor.y < bottom && bottom > 0 {
                 // Remove bottom line of scroll region
@@ -445,6 +447,7 @@ impl VirtualTerminal {
 
     fn delete_lines(&mut self, count: usize) {
         let bottom = self.scroll_bottom.min(self.grid.len());
+        let count = count.min(self.rows);
         for _ in 0..count {
             if self.cursor.y >= self.scroll_top && self.cursor.y < bottom {
                 self.grid.remove(self.cursor.y);
@@ -676,14 +679,14 @@ impl Perform for VirtualTerminal {
             }
             // SU - Scroll Up
             'S' => {
-                let n = p.first().copied().unwrap_or(1).max(1) as usize;
+                let n = (p.first().copied().unwrap_or(1).max(1) as usize).min(self.rows);
                 for _ in 0..n {
                     self.scroll_up();
                 }
             }
             // SD - Scroll Down
             'T' => {
-                let n = p.first().copied().unwrap_or(1).max(1) as usize;
+                let n = (p.first().copied().unwrap_or(1).max(1) as usize).min(self.rows);
                 for _ in 0..n {
                     self.scroll_down();
                 }
