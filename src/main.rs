@@ -14,6 +14,7 @@ use crossterm::{
 use ratatui::prelude::*;
 use std::io;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use app::App;
 use event::EventHandler;
@@ -134,14 +135,39 @@ fn parse_args() -> Args {
     }
 }
 
+/// Restore terminal state (raw mode, alternate screen, mouse capture).
+/// Safe to call multiple times.
+fn restore_terminal() {
+    let _ = disable_raw_mode();
+    let _ = execute!(
+        io::stdout(),
+        LeaveAlternateScreen,
+        DisableMouseCapture
+    );
+}
+
+/// Whether we have already entered raw/alternate-screen mode.
+static TERMINAL_INITIALIZED: AtomicBool = AtomicBool::new(false);
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = parse_args();
+
+    // Install panic hook to restore terminal state on panic.
+    // Without this, a panic leaves the terminal in raw mode (unusable).
+    let original_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        if TERMINAL_INITIALIZED.load(Ordering::SeqCst) {
+            restore_terminal();
+        }
+        original_hook(info);
+    }));
 
     // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+    TERMINAL_INITIALIZED.store(true, Ordering::SeqCst);
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
@@ -166,12 +192,7 @@ async fn main() -> Result<()> {
     let result = run_app(&mut terminal, &mut app, event_handler).await;
 
     // Restore terminal
-    disable_raw_mode()?;
-    execute!(
-        terminal.backend_mut(),
-        LeaveAlternateScreen,
-        DisableMouseCapture
-    )?;
+    restore_terminal();
     terminal.show_cursor()?;
 
     if let Err(err) = result {

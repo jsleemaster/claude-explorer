@@ -14,7 +14,7 @@ impl<'a> TerminalWidget<'a> {
 
 impl<'a> Widget for TerminalWidget<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let vterm = self.terminal.vterm().lock().unwrap();
+        let vterm = self.terminal.vterm_lock();
         let grid = vterm.grid();
         let scrollback = vterm.scrollback();
         let scroll_offset = vterm.scroll_offset();

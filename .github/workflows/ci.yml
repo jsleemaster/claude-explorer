@@ -35,6 +35,9 @@ jobs:
       - name: Format check
         run: cargo fmt --check
 
+      - name: Security audit
+        run: cargo install cargo-audit --locked && cargo audit
+
       - name: Clippy
         run: cargo clippy -- -D warnings
 
