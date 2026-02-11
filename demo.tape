@@ -12,23 +12,17 @@ Set TypingSpeed 50ms
 # Launch cltree
 Type "cltree"
 Enter
-Sleep 5s
-
-# Use ! to open terminal in Claude Code
-Type "!"
-Sleep 1s
-Enter
 Sleep 3s
 
 # Navigate directories to show CWD tracking
-Type "cd src"
+Type "! cd src"
 Enter
 Sleep 5s
 
-Type "cd ui"
+Type "! cd ui"
 Enter
 Sleep 5s
 
-Type "cd ../.."
+Type "! cd .."
 Enter
 Sleep 5s
