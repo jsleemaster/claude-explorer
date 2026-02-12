@@ -34,6 +34,13 @@ impl App {
 
     pub fn tick(&mut self) -> bool {
         self.terminal.tick();
+        // Process clipboard requests from vterm (OSC 52)
+        {
+            let requests = self.terminal.vterm_lock().take_clipboard_requests();
+            for text in requests {
+                copy_to_clipboard(&text);
+            }
+        }
         if self.tree_loading {
             self.tree_loading = false;
         }
