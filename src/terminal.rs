@@ -9,6 +9,20 @@ use tokio::sync::mpsc;
 
 use crate::vterm::VirtualTerminal;
 
+/// RAII guard that ensures the child process is waited on when dropped,
+/// preventing zombie processes even if the reader thread panics.
+struct ChildGuard {
+    child: Box<dyn portable_pty::Child + Send>,
+    exited: Arc<AtomicBool>,
+}
+
+impl Drop for ChildGuard {
+    fn drop(&mut self) {
+        self.exited.store(true, Ordering::SeqCst);
+        let _ = self.child.wait();
+    }
+}
+
 /// Lock a mutex, recovering from poison (prior thread panic).
 fn lock_or_recover<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
     mutex
@@ -101,7 +115,7 @@ impl TerminalPane {
             cmd.arg(arg);
         }
 
-        let mut child = pty_pair.slave.spawn_command(cmd)?;
+        let child = pty_pair.slave.spawn_command(cmd)?;
 
         // Get child PID before moving child into the thread
         let child_pid = child.process_id();
@@ -119,6 +133,11 @@ impl TerminalPane {
         let writer_clone = Arc::clone(pty_writer);
 
         thread::spawn(move || {
+            // ChildGuard ensures wait() is called even on panic
+            let _guard = ChildGuard {
+                child,
+                exited: exited_clone,
+            };
             let mut buf = [0u8; 4096];
             loop {
                 match reader.read(&mut buf) {
@@ -141,11 +160,13 @@ impl TerminalPane {
                         }
                         let _ = pty_tx.send(());
                     }
-                    Err(_) => break,
+                    Err(e) => {
+                        eprintln!("PTY read error: {e}");
+                        break;
+                    }
                 }
             }
-            exited_clone.store(true, Ordering::SeqCst);
-            let _ = child.wait();
+            // ChildGuard::drop will set exited flag and wait for child
         });
 
         Ok((pty_pair, child_pid))
