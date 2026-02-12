@@ -56,6 +56,8 @@ pub struct VirtualTerminal {
     response_queue: Vec<Vec<u8>>,
     // CWD reported via OSC 7
     reported_cwd: Option<PathBuf>,
+    // Clipboard requests from OSC 52
+    clipboard_requests: Vec<String>,
 }
 
 const MAX_SCROLLBACK: usize = 1000;
@@ -79,12 +81,18 @@ impl VirtualTerminal {
             scroll_bottom: rows,
             response_queue: Vec::new(),
             reported_cwd: None,
+            clipboard_requests: Vec::new(),
         }
     }
 
     /// Take pending responses (e.g. DSR/CPR replies) to send back to the PTY
     pub fn take_responses(&mut self) -> Vec<Vec<u8>> {
         std::mem::take(&mut self.response_queue)
+    }
+
+    /// Take pending clipboard requests (from OSC 52) for the app to process
+    pub fn take_clipboard_requests(&mut self) -> Vec<String> {
+        std::mem::take(&mut self.clipboard_requests)
     }
 
     /// Get the CWD reported via OSC 7
@@ -241,6 +249,23 @@ impl VirtualTerminal {
             }
         }
 
+        // Wide char boundary check: if a 2-cell char can't fit, pad and wrap
+        let w = char_width.unwrap_or(1);
+        if w == 2 && self.cursor.x + 1 >= self.cols {
+            if self.cursor.y < self.rows && self.cursor.x < self.cols {
+                self.grid[self.cursor.y][self.cursor.x] = Cell {
+                    ch: " ".to_string(),
+                    style: self.current_style,
+                };
+            }
+            self.cursor.x = 0;
+            self.cursor.y += 1;
+            if self.cursor.y >= self.rows {
+                self.scroll_up();
+                self.cursor.y = self.rows - 1;
+            }
+        }
+
         if self.cursor.y < self.rows && self.cursor.x < self.cols {
             self.grid[self.cursor.y][self.cursor.x] = Cell {
                 ch: ch.to_string(),
@@ -251,7 +276,6 @@ impl VirtualTerminal {
         self.cursor.x += 1;
 
         // Handle wide characters
-        let w = char_width.unwrap_or(1);
         if w == 2 && self.cursor.x < self.cols {
             // Mark next cell as continuation (empty string)
             self.grid[self.cursor.y][self.cursor.x] = Cell {
@@ -536,6 +560,43 @@ fn percent_decode(input: &str) -> String {
     String::from_utf8_lossy(&result).into_owned()
 }
 
+fn base64_decode(input: &str) -> Option<String> {
+    fn decode_char(c: u8) -> Option<u8> {
+        match c {
+            b'A'..=b'Z' => Some(c - b'A'),
+            b'a'..=b'z' => Some(c - b'a' + 26),
+            b'0'..=b'9' => Some(c - b'0' + 52),
+            b'+' => Some(62),
+            b'/' => Some(63),
+            _ => None,
+        }
+    }
+
+    let input: Vec<u8> = input
+        .bytes()
+        .filter(|&b| b != b'=' && b != b'\n' && b != b'\r')
+        .collect();
+    let mut output = Vec::with_capacity(input.len() * 3 / 4);
+
+    for chunk in input.chunks(4) {
+        let mut buf = [0u8; 4];
+        let len = chunk.len();
+        for (i, &byte) in chunk.iter().enumerate() {
+            buf[i] = decode_char(byte)?;
+        }
+
+        output.push((buf[0] << 2) | (buf[1] >> 4));
+        if len > 2 {
+            output.push((buf[1] << 4) | (buf[2] >> 2));
+        }
+        if len > 3 {
+            output.push((buf[2] << 6) | buf[3]);
+        }
+    }
+
+    String::from_utf8(output).ok()
+}
+
 impl Perform for VirtualTerminal {
     fn print(&mut self, c: char) {
         self.put_char(c);
@@ -584,9 +645,9 @@ impl Perform for VirtualTerminal {
     }
 
     fn osc_dispatch(&mut self, params: &[&[u8]], _bell_terminated: bool) {
-        // OSC 7: Current working directory reporting
-        // Format: OSC 7 ; file://hostname/path ST
         if let Some(first) = params.first() {
+            // OSC 7: Current working directory reporting
+            // Format: OSC 7 ; file://hostname/path ST
             if *first == b"7" {
                 if let Some(uri) = params.get(1) {
                     if let Ok(uri_str) = std::str::from_utf8(uri) {
@@ -597,6 +658,18 @@ impl Perform for VirtualTerminal {
                         {
                             let decoded = percent_decode(path_str);
                             self.reported_cwd = Some(PathBuf::from(decoded));
+                        }
+                    }
+                }
+            }
+
+            // OSC 52: Clipboard manipulation
+            // Format: OSC 52 ; <selection> ; <base64-data> ST
+            if *first == b"52" {
+                if let Some(data_bytes) = params.get(2) {
+                    if let Ok(data_str) = std::str::from_utf8(data_bytes) {
+                        if let Some(decoded) = base64_decode(data_str) {
+                            self.clipboard_requests.push(decoded);
                         }
                     }
                 }
@@ -1037,5 +1110,38 @@ mod tests {
         assert_eq!(vt.grid[0][0].ch, "A");
         assert_eq!(vt.grid[1][0].ch, " "); // Inserted blank line
         assert_eq!(vt.grid[2][0].ch, "B"); // Pushed down
+    }
+
+    #[test]
+    fn test_wide_char_at_boundary() {
+        // 6-column terminal: wide char at col 5 (last col) should wrap
+        let mut vt = VirtualTerminal::new(6, 3);
+        vt.feed("ABCDE".as_bytes());
+        // Cursor at col 5 (last col). Write a wide char '한' (2 cells)
+        vt.feed("한".as_bytes());
+        // Col 5 should be padded with space, '한' should be on next line
+        assert_eq!(vt.grid[0][5].ch, " ");
+        assert_eq!(vt.grid[1][0].ch, "한");
+        assert_eq!(vt.grid[1][1].ch, ""); // continuation cell
+    }
+
+    #[test]
+    fn test_wide_char_fits() {
+        // Wide char at col 4 of 6-col terminal should fit
+        let mut vt = VirtualTerminal::new(6, 3);
+        vt.feed("ABCD".as_bytes());
+        vt.feed("한".as_bytes());
+        assert_eq!(vt.grid[0][4].ch, "한");
+        assert_eq!(vt.grid[0][5].ch, ""); // continuation cell
+    }
+
+    #[test]
+    fn test_osc52_clipboard() {
+        let mut vt = VirtualTerminal::new(80, 24);
+        // OSC 52 with base64 "SGVsbG8=" = "Hello"
+        vt.feed(b"\x1b]52;c;SGVsbG8=\x1b\\");
+        let requests = vt.take_clipboard_requests();
+        assert_eq!(requests.len(), 1);
+        assert_eq!(requests[0], "Hello");
     }
 }
