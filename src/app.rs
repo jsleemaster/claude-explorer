@@ -73,3 +73,47 @@ impl App {
         }
     }
 }
+
+#[allow(dead_code)]
+pub(crate) fn copy_to_clipboard(text: &str) -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        try_clipboard_cmd("pbcopy", &[], text)
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        // Try xclip first, then xsel, then wl-copy (Wayland)
+        try_clipboard_cmd("xclip", &["-selection", "clipboard"], text)
+            || try_clipboard_cmd("xsel", &["--clipboard", "--input"], text)
+            || try_clipboard_cmd("wl-copy", &[], text)
+    }
+
+    #[cfg(not(any(target_os = "macos", target_os = "linux")))]
+    {
+        let _ = text;
+        false
+    }
+}
+
+#[allow(dead_code)]
+fn try_clipboard_cmd(program: &str, args: &[&str], text: &str) -> bool {
+    use std::io::Write;
+    use std::process::{Command, Stdio};
+
+    match Command::new(program)
+        .args(args)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+    {
+        Ok(mut child) => {
+            if let Some(ref mut stdin) = child.stdin {
+                let _ = stdin.write_all(text.as_bytes());
+            }
+            child.wait().map(|s| s.success()).unwrap_or(false)
+        }
+        Err(_) => false,
+    }
+}
