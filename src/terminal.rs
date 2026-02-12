@@ -555,6 +555,12 @@ impl TerminalPane {
     }
 
     pub fn send_focus_event(&mut self, gained: bool) {
+        // Only forward focus events if the child process has enabled
+        // focus tracking (DECSET 1004). Otherwise the raw \x1b[I / \x1b[O
+        // sequence would be echoed as visible ^[[I / ^[[O by the shell.
+        if !self.vterm_lock().focus_tracking_enabled() {
+            return;
+        }
         let seq = if gained {
             b"\x1b[I" as &[u8]
         } else {

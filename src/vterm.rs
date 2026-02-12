@@ -58,6 +58,8 @@ pub struct VirtualTerminal {
     reported_cwd: Option<PathBuf>,
     // Clipboard requests from OSC 52
     clipboard_requests: Vec<String>,
+    // Whether the child process has enabled focus event tracking (DECSET 1004)
+    focus_tracking: bool,
 }
 
 const MAX_SCROLLBACK: usize = 1000;
@@ -82,6 +84,7 @@ impl VirtualTerminal {
             response_queue: Vec::new(),
             reported_cwd: None,
             clipboard_requests: Vec::new(),
+            focus_tracking: false,
         }
     }
 
@@ -98,6 +101,11 @@ impl VirtualTerminal {
     /// Get the CWD reported via OSC 7
     pub fn reported_cwd(&self) -> Option<&Path> {
         self.reported_cwd.as_deref()
+    }
+
+    /// Whether the child process has enabled focus event tracking (DECSET 1004)
+    pub fn focus_tracking_enabled(&self) -> bool {
+        self.focus_tracking
     }
 
     fn make_grid(cols: usize, rows: usize) -> Vec<Vec<Cell>> {
@@ -809,6 +817,10 @@ impl Perform for VirtualTerminal {
                                     self.leave_alternate_screen();
                                 }
                             }
+                            // 1004 = Focus event tracking
+                            1004 => {
+                                self.focus_tracking = set;
+                            }
                             // Modes we acknowledge but don't need special handling for:
                             // 1 = DECCKM (cursor key mode), 7 = DECAWM (auto-wrap),
                             // 12 = blinking cursor, 1000/1002/1003/1006 = mouse modes,
@@ -1143,5 +1155,23 @@ mod tests {
         let requests = vt.take_clipboard_requests();
         assert_eq!(requests.len(), 1);
         assert_eq!(requests[0], "Hello");
+    }
+
+    #[test]
+    fn test_focus_tracking() {
+        let mut vt = VirtualTerminal::new(80, 24);
+        // Focus tracking is off by default
+        assert!(!vt.focus_tracking_enabled());
+        // DECSET 1004 enables focus tracking
+        vt.feed(b"\x1b[?1004h");
+        assert!(vt.focus_tracking_enabled());
+        // Focus event sequences should be silently consumed (no visible output)
+        vt.feed(b"\x1b[I");
+        assert_eq!(vt.grid[0][0].ch, " ");
+        vt.feed(b"\x1b[O");
+        assert_eq!(vt.grid[0][0].ch, " ");
+        // DECRST 1004 disables focus tracking
+        vt.feed(b"\x1b[?1004l");
+        assert!(!vt.focus_tracking_enabled());
     }
 }
