@@ -7,7 +7,10 @@ pub mod vterm;
 
 use anyhow::Result;
 use crossterm::{
-    event::{DisableFocusChange, DisableMouseCapture, EnableFocusChange, EnableMouseCapture},
+    event::{
+        DisableBracketedPaste, DisableFocusChange, DisableMouseCapture, EnableBracketedPaste,
+        EnableFocusChange, EnableMouseCapture,
+    },
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -143,7 +146,8 @@ fn restore_terminal() {
         io::stdout(),
         LeaveAlternateScreen,
         DisableMouseCapture,
-        DisableFocusChange
+        DisableFocusChange,
+        DisableBracketedPaste
     );
 }
 
@@ -171,7 +175,8 @@ async fn main() -> Result<()> {
         stdout,
         EnterAlternateScreen,
         EnableMouseCapture,
-        EnableFocusChange
+        EnableFocusChange,
+        EnableBracketedPaste
     )?;
     TERMINAL_INITIALIZED.store(true, Ordering::SeqCst);
     let backend = CrosstermBackend::new(stdout);
@@ -232,6 +237,9 @@ async fn run_app(
             }
             event::Event::Mouse(mouse_event) => {
                 app.handle_mouse(mouse_event);
+            }
+            event::Event::Paste(text) => {
+                app.handle_paste(text);
             }
             event::Event::Resize(_width, _height) => {}
             event::Event::FocusGained => {

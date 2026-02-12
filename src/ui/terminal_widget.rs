@@ -1,14 +1,48 @@
 use ratatui::{prelude::*, widgets::Widget};
 
+use crate::app::Selection;
 use crate::terminal::TerminalPane;
 
 pub struct TerminalWidget<'a> {
     terminal: &'a TerminalPane,
+    selection: Option<&'a Selection>,
 }
 
 impl<'a> TerminalWidget<'a> {
-    pub fn new(terminal: &'a TerminalPane) -> Self {
-        Self { terminal }
+    pub fn new(terminal: &'a TerminalPane, selection: Option<&'a Selection>) -> Self {
+        Self {
+            terminal,
+            selection,
+        }
+    }
+
+    /// Check if a given (col, row) is within the selection range.
+    fn is_selected(&self, col: u16, row: u16) -> bool {
+        let sel = match self.selection {
+            Some(s) => s,
+            None => return false,
+        };
+
+        // Normalize so start <= end in reading order
+        let (start, end) = if (sel.start.1, sel.start.0) <= (sel.end.1, sel.end.0) {
+            (sel.start, sel.end)
+        } else {
+            (sel.end, sel.start)
+        };
+
+        if row < start.1 || row > end.1 {
+            return false;
+        }
+        if row == start.1 && row == end.1 {
+            return col >= start.0 && col <= end.0;
+        }
+        if row == start.1 {
+            return col >= start.0;
+        }
+        if row == end.1 {
+            return col <= end.0;
+        }
+        true
     }
 }
 
@@ -35,7 +69,12 @@ impl<'a> Widget for TerminalWidget<'a> {
                         if x < area.x + area.width && y < area.y + area.height {
                             if let Some(buf_cell) = buf.cell_mut((x, y)) {
                                 buf_cell.set_symbol(&cell.ch);
-                                buf_cell.set_style(cell.style);
+                                let style = if self.is_selected(col_idx as u16, row_idx as u16) {
+                                    cell.style.add_modifier(Modifier::REVERSED)
+                                } else {
+                                    cell.style
+                                };
+                                buf_cell.set_style(style);
                             }
                         }
                     }
@@ -68,7 +107,12 @@ impl<'a> Widget for TerminalWidget<'a> {
                         if x < area.x + area.width && y < area.y + area.height {
                             if let Some(buf_cell) = buf.cell_mut((x, y)) {
                                 buf_cell.set_symbol(&cell.ch);
-                                buf_cell.set_style(cell.style);
+                                let style = if self.is_selected(col_idx as u16, screen_row as u16) {
+                                    cell.style.add_modifier(Modifier::REVERSED)
+                                } else {
+                                    cell.style
+                                };
+                                buf_cell.set_style(style);
                             }
                         }
                     }
