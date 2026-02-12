@@ -12,6 +12,7 @@ pub enum Event {
     Tick,
     Key(KeyEvent),
     Mouse(MouseEvent),
+    Paste(String),
     Resize(u16, u16),
     FocusGained,
     FocusLost,
@@ -46,6 +47,7 @@ impl EventHandler {
                 tokio::select! {
                     // Crossterm terminal events (key, mouse, resize)
                     maybe_event = crossterm_events.next() => {
+                        #[allow(unreachable_patterns)]
                         match maybe_event {
                             Some(Ok(crossterm::event::Event::Key(key))) => {
                                 if tx_clone.send(Event::Key(key)).is_err() {
@@ -69,6 +71,11 @@ impl EventHandler {
                             }
                             Some(Ok(crossterm::event::Event::FocusLost)) => {
                                 if tx_clone.send(Event::FocusLost).is_err() {
+                                    break;
+                                }
+                            }
+                            Some(Ok(crossterm::event::Event::Paste(text))) => {
+                                if tx_clone.send(Event::Paste(text)).is_err() {
                                     break;
                                 }
                             }

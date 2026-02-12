@@ -37,7 +37,10 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
     app.terminal
         .resize(terminal_inner.width, terminal_inner.height);
 
-    let terminal_widget = TerminalWidget::new(&app.terminal);
+    // Store terminal area for mouse drag routing
+    app.terminal_area = Some(terminal_inner);
+
+    let terminal_widget = TerminalWidget::new(&app.terminal, app.selection.as_ref());
     frame.render_widget(terminal_widget, terminal_inner);
 
     // Set hardware blinking cursor position (terminal always focused)
@@ -78,28 +81,39 @@ pub fn draw(frame: &mut Frame, app: &mut App) {
     let tree_inner = tree_block.inner(tree_area);
     frame.render_widget(tree_block, tree_area);
 
+    // Store tree area for mouse scroll routing
+    app.tree_area = Some(tree_inner);
+
     if app.tree_loading {
         let loading =
             Paragraph::new("  Scanning files...").style(Style::default().fg(Color::DarkGray));
         frame.render_widget(loading, tree_inner);
     } else {
-        // Auto-scroll to keep CWD visible
+        // Auto-scroll to keep CWD visible — only when CWD actually changes
         let visible_height = tree_inner.height as usize;
         let cwd = app.terminal.cwd();
-        let cwd_index = app
-            .tree
-            .nodes()
-            .iter()
-            .position(|n| n.is_dir && n.path == cwd);
+        let cwd_changed = app
+            .last_auto_scroll_cwd
+            .as_ref()
+            .is_none_or(|last| last.as_path() != cwd);
 
-        if let Some(idx) = cwd_index {
-            let mut offset = app.tree.offset();
-            if idx >= offset + visible_height {
-                offset = idx - visible_height + 1;
-            } else if idx < offset {
-                offset = idx;
+        if cwd_changed {
+            let cwd_index = app
+                .tree
+                .nodes()
+                .iter()
+                .position(|n| n.is_dir && n.path == cwd);
+
+            if let Some(idx) = cwd_index {
+                let mut offset = app.tree.offset();
+                if idx >= offset + visible_height {
+                    offset = idx - visible_height + 1;
+                } else if idx < offset {
+                    offset = idx;
+                }
+                app.tree.set_offset(offset);
             }
-            app.tree.set_offset(offset);
+            app.last_auto_scroll_cwd = Some(cwd.to_path_buf());
         }
 
         // Render file tree

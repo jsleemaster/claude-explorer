@@ -545,6 +545,19 @@ impl TerminalPane {
         }
     }
 
+    /// Send pasted text wrapped in bracketed-paste escape sequences.
+    /// This prevents the terminal from interpreting newlines as Enter keypresses.
+    pub fn handle_paste(&mut self, text: String) {
+        if let Ok(mut guard) = self.pty_writer.lock() {
+            if let Some(ref mut writer) = *guard {
+                let _ = writer.write_all(b"\x1b[200~");
+                let _ = writer.write_all(text.as_bytes());
+                let _ = writer.write_all(b"\x1b[201~");
+                let _ = writer.flush();
+            }
+        }
+    }
+
     pub fn send_interrupt(&mut self) {
         if let Ok(mut guard) = self.pty_writer.lock() {
             if let Some(ref mut writer) = *guard {
@@ -589,6 +602,70 @@ impl TerminalPane {
         let mut vt = lock_or_recover(&self.vterm);
         let current = vt.scroll_offset();
         vt.set_scroll_offset(current.saturating_sub(3));
+    }
+
+    /// Extract text from a selection range (terminal-local coordinates).
+    /// Coordinates are (col, row) relative to the visible terminal area.
+    pub fn extract_text(&self, start: (u16, u16), end: (u16, u16)) -> String {
+        let vt = lock_or_recover(&self.vterm);
+        let grid = vt.grid();
+        let scrollback = vt.scrollback();
+        let scroll_offset = vt.scroll_offset();
+        let cols = vt.cols();
+        let total_lines = scrollback.len() + grid.len();
+
+        // Normalize start/end so start is before end
+        let (start, end) = if (start.1, start.0) <= (end.1, end.0) {
+            (start, end)
+        } else {
+            (end, start)
+        };
+
+        let visible_height = grid.len();
+        // Map screen row to absolute line index in scrollback+grid
+        let abs_line = |screen_row: u16| -> usize {
+            if scroll_offset == 0 {
+                scrollback.len() + screen_row as usize
+            } else {
+                let bottom = total_lines.saturating_sub(scroll_offset);
+                let top = bottom.saturating_sub(visible_height);
+                top + screen_row as usize
+            }
+        };
+
+        let start_line = abs_line(start.1);
+        let end_line = abs_line(end.1);
+
+        let get_row = |line_idx: usize| -> Option<&Vec<crate::vterm::Cell>> {
+            if line_idx < scrollback.len() {
+                scrollback.get(line_idx)
+            } else {
+                grid.get(line_idx - scrollback.len())
+            }
+        };
+
+        let mut lines = Vec::new();
+        for line_idx in start_line..=end_line {
+            if let Some(row) = get_row(line_idx) {
+                let col_start = if line_idx == start_line {
+                    start.0 as usize
+                } else {
+                    0
+                };
+                let col_end = if line_idx == end_line {
+                    (end.0 as usize + 1).min(cols)
+                } else {
+                    cols
+                };
+                let text: String = row[col_start..col_end.min(row.len())]
+                    .iter()
+                    .map(|c| if c.ch.is_empty() { " " } else { c.ch.as_str() })
+                    .collect();
+                lines.push(text.trim_end().to_string());
+            }
+        }
+
+        lines.join("\n")
     }
 
     pub fn resize(&mut self, cols: u16, rows: u16) {
