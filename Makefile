@@ -27,7 +27,7 @@ fix:
 
 # Record demo.gif from local release build (requires vhs: https://github.com/charmbracelet/vhs)
 demo: build
-	PATH="$(CURDIR)/target/release:$(PATH)" CLTREE_COMMAND=bash vhs demo.tape
+	PATH="$(CURDIR)/target/release:$(PATH)" CLTREE_COMMAND=$(CURDIR)/scripts/mock-claude.sh vhs demo.tape
 
 # Alias: check = ci
 check: ci

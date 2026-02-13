@@ -14,17 +14,17 @@ Type "cltree"
 Enter
 Sleep 3s
 
-# Navigate into src directory
-Type "cd src"
+# Ask Claude to navigate into src directory
+Type "look at the src directory"
 Enter
 Sleep 3s
 
-# Navigate deeper into tree subdirectory
-Type "cd tree"
+# Ask Claude to explore tree module
+Type "explore the tree module"
 Enter
 Sleep 3s
 
-# Navigate back to project root
-Type "cd ../.."
+# Ask Claude to go back to root
+Type "go back to the project root"
 Enter
 Sleep 3s
