@@ -6,25 +6,31 @@ report_cwd() {
     printf '\e]7;file://%s%s\e\\' "$(hostname)" "$PWD"
 }
 
-# Print initial header
+# Print initial header (matches real Claude Code CLI)
 print_startup() {
     local cwd_display="${PWD/#$HOME/~}"
+    local dir_name=$(basename "$PWD")
     printf '\e[2J\e[H'
+    # Robot icon
     printf '\n'
-    printf '  \e[38;5;208m✻\e[0m  \e[1m%s\e[0m\n' "$cwd_display"
-    printf '     \e[38;5;34mOpus 4.6 is here\e[0m \e[2m- /extra-usage to enable\e[0m\n'
+    printf '     \e[38;5;208m╱│╲\e[0m   \e[1mClaude Code\e[0m v2.1.39\n'
+    printf '     \e[38;5;208m╰─╯\e[0m   \e[38;5;141mOpus 4.6\e[0m · \e[2mClaude Max\e[0m\n'
+    printf '           %s\n' "$cwd_display"
+    printf '           \e[38;5;34mOpus 4.6 is here\e[0m \e[2m· $50 free extra usage · /extra-usage to enable\e[0m\n'
     printf '\n'
 }
 
-# Print Claude-style tool use block
+# Print Claude-style tool use block (matches real Claude Code CLI)
 claude_tool_use() {
     local explanation="$1"
     local command="$2"
+    local tool_name="${3:-Bash}"
     printf '\n'
     printf '  %s\n' "$explanation"
     printf '\n'
-    printf '  \e[90m$\e[0m %s\n' "$command"
-    printf '  \e[90m⎿\e[0m (No output)\n'
+    # Tool use header with spinning indicator style
+    printf '  \e[38;5;75m⏺\e[0m \e[1m%s\e[0m \e[2m%s\e[0m\n' "$tool_name" "$command"
+    printf '    \e[90m⎿\e[0m \e[2mDone\e[0m\n'
     printf '\n'
 }
 
@@ -66,6 +72,13 @@ handle_input() {
             fi
             ;;
     esac
+}
+
+# Print status bar (bottom)
+print_statusbar() {
+    local dir_name=$(basename "$PWD")
+    local branch=$(git branch --show-current 2>/dev/null || echo "main")
+    printf '\n  \e[2m[%s] (%s ●) | Opus 4.6\e[0m\n' "$dir_name" "$branch"
 }
 
 # --- Main ---

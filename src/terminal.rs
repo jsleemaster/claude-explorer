@@ -39,9 +39,9 @@ pub struct TerminalPane {
     process_exited: Arc<AtomicBool>,
     last_cols: u16,
     last_rows: u16,
-    // Debounce: to revert CWD to a shallower path, it must be the deepest
-    // found for several consecutive ticks (prevents flickering)
-    shallow_revert_count: u32,
+    // Debounce: pending CWD change must be detected consistently before applying
+    pending_cwd: Option<PathBuf>,
+    pending_cwd_count: u32,
 }
 
 impl TerminalPane {
@@ -87,7 +87,8 @@ impl TerminalPane {
             process_exited,
             last_cols: 80,
             last_rows: 24,
-            shallow_revert_count: 0,
+            pending_cwd: None,
+            pending_cwd_count: 0,
         })
     }
 
@@ -116,6 +117,18 @@ impl TerminalPane {
             cmd.arg(arg);
         }
         cmd.env("TERM", "xterm-256color");
+        // Inherit essential environment variables for Claude CLI to work in VHS/PTY environments
+        if let Ok(path) = std::env::var("PATH") {
+            cmd.env("PATH", path);
+        }
+        if let Ok(home) = std::env::var("HOME") {
+            cmd.env("HOME", home);
+        }
+        if let Ok(lang) = std::env::var("LANG") {
+            cmd.env("LANG", lang);
+        }
+        // Remove CLAUDECODE env var to allow nested Claude sessions
+        cmd.env_remove("CLAUDECODE");
 
         let child = pty_pair.slave.spawn_command(cmd)?;
 
@@ -179,25 +192,35 @@ impl TerminalPane {
     }
 
     pub fn tick(&mut self) {
-        // 1. Try OSC 7 first (shell-reported CWD)
+        // 1. Try OSC 7 first (shell-reported CWD) — only apply if deeper or same
+        //    (prevents flickering from stale reports)
         if let Ok(vt) = self.vterm.lock() {
             if let Some(reported) = vt.reported_cwd() {
                 if reported != self.cwd {
-                    self.cwd = reported.to_path_buf();
-                    self.shallow_revert_count = 0;
-                    return;
+                    let new_depth = reported.components().count();
+                    let cur_depth = self.cwd.components().count();
+                    if new_depth >= cur_depth {
+                        self.cwd = reported.to_path_buf();
+                        self.pending_cwd = None;
+                        self.pending_cwd_count = 0;
+                        return;
+                    }
                 }
             }
         }
 
-        // 2. Try OS process CWD — reliable for shells that actually cd
-        //    (Claude Code doesn't cd, so this won't change for it → falls through to buffer scanning)
+        // 2. Try OS process CWD — only apply if deeper or same
         if let Some(pid) = self.child_pid {
             if let Some(proc_cwd) = get_process_cwd(pid) {
                 if proc_cwd != self.cwd {
-                    self.cwd = proc_cwd;
-                    self.shallow_revert_count = 0;
-                    return;
+                    let new_depth = proc_cwd.components().count();
+                    let cur_depth = self.cwd.components().count();
+                    if new_depth >= cur_depth {
+                        self.cwd = proc_cwd;
+                        self.pending_cwd = None;
+                        self.pending_cwd_count = 0;
+                        return;
+                    }
                 }
             }
         }
@@ -256,26 +279,34 @@ impl TerminalPane {
 
             if let Some(path) = best_path {
                 if path == self.cwd {
-                    // Same as current — stable, reset counter
-                    self.shallow_revert_count = 0;
+                    // Same as current — stable
+                    self.pending_cwd = None;
+                    self.pending_cwd_count = 0;
                 } else {
                     let new_depth = path.components().count();
                     let cur_depth = self.cwd.components().count();
 
                     if new_depth > cur_depth {
-                        // Deeper path found — apply immediately
+                        // Deeper path — apply immediately (user navigated deeper)
                         self.cwd = path;
-                        self.shallow_revert_count = 0;
-                    } else {
-                        // Shallower path — require consistent detection before reverting
-                        // (prevents flickering when deeper path disappears temporarily)
-                        self.shallow_revert_count += 1;
-                        if self.shallow_revert_count >= 16 {
-                            // ~4 seconds of consistent shallow detection
-                            self.cwd = path;
-                            self.shallow_revert_count = 0;
+                        self.pending_cwd = None;
+                        self.pending_cwd_count = 0;
+                    } else if new_depth < cur_depth {
+                        // Shallower path — require consistent detection to prevent flickering
+                        if self.pending_cwd.as_ref() == Some(&path) {
+                            self.pending_cwd_count += 1;
+                            if self.pending_cwd_count >= 8 {
+                                // ~2 seconds of consistent shallow detection
+                                self.cwd = path;
+                                self.pending_cwd = None;
+                                self.pending_cwd_count = 0;
+                            }
+                        } else {
+                            self.pending_cwd = Some(path);
+                            self.pending_cwd_count = 1;
                         }
                     }
+                    // Same depth — ignore (stay at current)
                 }
             }
         }

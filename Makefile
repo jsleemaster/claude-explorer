@@ -26,8 +26,9 @@ fix:
 	@echo "Formatting fixed."
 
 # Record demo.gif from local release build (requires vhs: https://github.com/charmbracelet/vhs)
+# Uses real claude CLI for authentic UI
 demo: build
-	PATH="$(CURDIR)/target/release:$(PATH)" CLTREE_COMMAND=$(CURDIR)/scripts/mock-claude.sh vhs demo.tape
+	PATH="$(CURDIR)/target/release:$(PATH)" vhs demo.tape
 
 # Alias: check = ci
 check: ci
